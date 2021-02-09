@@ -18,6 +18,17 @@ class _homePageState extends State<HomePage> {
   MyMusic _selectedMusic;
   Color _selectedColor;
   bool _isPlaying = false;
+   final sugg = [
+    "Play",
+    "Stop",
+    "Play rock music",
+    "Play 107 FM",
+    "Play next",
+    "Play 104 FM",
+    "Pause",
+    "Play previous",
+    "Play pop music"
+  ];
 
   final AudioPlayer _audioPlayer = AudioPlayer();
 
@@ -50,6 +61,37 @@ class _homePageState extends State<HomePage> {
         _playMusic(_selectedMusic.url);
 
         break;
+      case "stop":
+        _audioPlayer.stop();
+        break;
+      case "next":
+        final index = _selectedMusic.id;
+        MyMusic newmusic;
+        if (index + 1 > radio.length) {
+          newmusic = radio.firstWhere((element) => element.id == 1);
+          radio.remove(newmusic);
+          radio.insert(0, newmusic);
+        } else {
+          newmusic = radio.firstWhere((element) => element.id == index + 1);
+          radio.remove(newmusic);
+          radio.insert(0, newmusic);
+        }
+        _playMusic(newmusic.url);
+        break;
+      case "prev":
+        final index = _selectedMusic.id;
+        MyMusic newmusic;
+        if (index - 1 <= 0 ) {
+          newmusic = radio.firstWhere((element) => element.id == 1);
+          radio.remove(newmusic);
+          radio.insert(0, newmusic);
+        } else {
+          newmusic = radio.firstWhere((element) => element.id == index - 1);
+          radio.remove(newmusic);
+          radio.insert(0, newmusic);
+        }
+        _playMusic(newmusic.url);
+        break;
       default:
         print("command was ${response["command"]}");
         break;
@@ -75,7 +117,33 @@ class _homePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: Drawer(),
+      drawer: Drawer(
+        child:  Container(
+          color: _selectedColor??AIcolors.primaryColor2,
+          child:  radio != null?
+          [
+             100.heightBox,
+                  "All Channels".text.xl.white.semiBold.make().px16(),
+                  20.heightBox,
+                  ListView(
+                    padding: Vx.m0,
+                    shrinkWrap: true,
+                    children: radio
+                        .map((e) => ListTile(
+                              leading: CircleAvatar(
+                                backgroundImage: NetworkImage(e.icon),
+                              ),
+                              title: "${e.name} FM".text.white.make(),
+                              subtitle: e.tagline.text.white.make(),
+                            ))
+                        .toList(),
+                  ).expand()
+          ].vStack(crossAlignment: CrossAxisAlignment.start)
+          :const Offstage(),
+          
+          
+          ),
+      ),
       body: Stack(
         children: [
           VxAnimatedBox()
@@ -94,7 +162,7 @@ class _homePageState extends State<HomePage> {
                 ),
               )
               .make(),
-          AppBar(
+        [  AppBar(
                   title: "musicAI".text.xl4.bold.white.make().shimmer(
                       primaryColor: Vx.purple300, secondaryColor: Vx.white),
                   backgroundColor: Colors.transparent,
@@ -102,10 +170,35 @@ class _homePageState extends State<HomePage> {
                   centerTitle: true)
               .h(100.0)
               .p16(),
+              5.heightBox,
+              "Start With Hey Alen👇🏻".text.italic.semiBold.white.make(),
+              5.heightBox,
+               VxSwiper.builder(
+              itemCount: sugg.length,
+              height: 50.0,
+              viewportFraction: 0.35,
+              autoPlay: true,
+              autoPlayAnimationDuration: 3.seconds,
+              autoPlayCurve: Curves.linear,
+              enableInfiniteScroll: true,
+              itemBuilder: (context, index) {
+                final s = sugg[index];
+                return Chip(
+                  label: s.text.make(),
+                  backgroundColor: Vx.randomColor,
+                );
+              },
+            )
+        ].vStack(),
+        40.heightBox,
           radio != null
               ? VxSwiper.builder(
                   itemCount: radio.length,
-                  aspectRatio: 1.0,
+                  aspectRatio:context.mdWindowSize == MobileWindowSize.xsmall
+                      ? 1.0
+                      : context.mdWindowSize == MobileWindowSize.medium
+                          ? 2.0
+                          : 3.0,
                   enlargeCenterPage: true,
                   onPageChanged: (index) {
                     // final color = radio[index].color;
